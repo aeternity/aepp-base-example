@@ -236,8 +236,9 @@
 
 <script>
   //  is a webpack alias present in webpack.config.js
-  import { Aepp } from '@aeternity/aepp-sdk/es'
-  import copyToClipboard from 'copy-to-clipboard';
+  import { Universal } from '@aeternity/aepp-sdk/es'
+  import DeeplinkClient from './deeplinkClient'
+  import copyToClipboard from 'copy-to-clipboard'
 
   const errorAsField = async fn => {
     try {
@@ -260,7 +261,6 @@
         spendPayload: null,
         spendResponse: null,
         contractCode: `contract Identity =
-      type state = ()
       entrypoint main(x : int) = x`,
         compileBytecodeResponse: null,
         contractInitState: [],
@@ -337,10 +337,12 @@
       }
     },
     async created () {
-      this.client = await Aepp.compose({
+      this.client = await Universal.compose(DeeplinkClient, {
         deepConfiguration: { Ae: { methods: ['readQrCode'] } },
       })({
-        parent: this.runningInFrame ? window.parent : await this.getReverseWindow()
+        url: 'https://sdk-testnet.aepps.com',
+        internalUrl: 'https://sdk-testnet.aepps.com',
+        compilerUrl: 'https://compiler.aepps.com',
       })
       this.addressResponse = await errorAsField(this.client.address())
       this.heightResponse = await errorAsField(this.client.height())
