@@ -47,6 +47,14 @@
       </template>
     </div>
 
+    <button
+      v-if="client"
+      class="w-32 rounded rounded-full bg-purple text-white py-2 px-4 pin-r mr-8 mt-4 text-xs"
+      @click="address"
+    >
+      Request address
+    </button>
+
     <h2 class="mt-4">Spend tokens</h2>
 
     <div class="border mt-4 rounded">
@@ -279,6 +287,11 @@
         : JSON.stringify(response.result, null, 4),
     },
     methods: {
+      async address () {
+        this.addressResponse = await errorAsField(this.client.address())
+        this.heightResponse = await errorAsField(this.client.height())
+        this.nodeInfoResponse = await errorAsField(this.client.getNodeInfo())
+      },
       async spend () {
         this.spendResponse = await errorAsField(this.client.spend(
           this.spendAmount,
@@ -344,9 +357,6 @@
         internalUrl: 'https://sdk-testnet.aepps.com',
         compilerUrl: 'https://compiler.aepps.com',
       })
-      this.addressResponse = await errorAsField(this.client.address())
-      this.heightResponse = await errorAsField(this.client.height())
-      this.nodeInfoResponse = await errorAsField(this.client.getNodeInfo())
     }
   }
 </script>
