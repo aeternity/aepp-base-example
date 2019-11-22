@@ -14,7 +14,7 @@ function addMethodToQueue(method) {
   }
 }
 
-const DeeplinkClient = stampit({
+const UrlSchemeRpcClient = stampit({
   init() {
     const url = new URL(window.location.href)
     const result = url.searchParams.get('result')
@@ -78,4 +78,4 @@ const DeeplinkClient = stampit({
   methods: R.fromPairs(['address', 'sign', 'signTransaction'].map(m => [m, addMethodToQueue(m)])),
 })
 
-export default DeeplinkClient
+export default UrlSchemeRpcClient
