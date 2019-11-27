@@ -48,11 +48,10 @@
     </div>
 
     <button
-      v-if="client"
       class="w-32 rounded rounded-full bg-purple text-white py-2 px-4 pin-r mr-8 mt-4 text-xs"
-      @click="address"
+      @click="initSdk"
     >
-      Request address
+      Sync address and network
     </button>
 
     <h2 class="mt-4">Spend tokens</h2>
@@ -245,7 +244,7 @@
 <script>
   //  is a webpack alias present in webpack.config.js
   import { Universal } from '@aeternity/aepp-sdk/es'
-  import UrlSchemeRpcClient from './UrlSchemeRpcClient'
+  import UrlSchemeRpcClient, { storeResponse } from './UrlSchemeRpcClient'
   import copyToClipboard from 'copy-to-clipboard'
 
   const errorAsField = async fn => {
@@ -287,7 +286,11 @@
         : JSON.stringify(response.result, null, 4),
     },
     methods: {
-      async address () {
+      async initSdk () {
+        if (this.client) this.client.destroyInstance();
+        this.client = await UrlSchemeRpcClient.compose(Universal, {
+          deepConfiguration: { Ae: { methods: ['readQrCode'] } },
+        })()
         this.addressResponse = await errorAsField(this.client.address())
         this.heightResponse = await errorAsField(this.client.height())
         this.nodeInfoResponse = await errorAsField(this.client.getNodeInfo())
@@ -333,30 +336,9 @@
           this.copyResponse = { error };
         }
       },
-      async getReverseWindow() {
-        const iframe = document.createElement('iframe')
-        iframe.src = prompt('Enter wallet URL', 'https://stage-identity.aepps.com')
-        iframe.style.display = 'none'
-        document.body.appendChild(iframe)
-        await new Promise(resolve => {
-          const handler = ({ data }) => {
-            if (data.method !== 'ready') return
-            window.removeEventListener('message', handler)
-            resolve()
-          }
-          window.addEventListener('message', handler)
-        })
-        return iframe.contentWindow
-      }
     },
     async created () {
-      this.client = await Universal.compose(UrlSchemeRpcClient, {
-        deepConfiguration: { Ae: { methods: ['readQrCode'] } },
-      })({
-        url: 'https://sdk-testnet.aepps.com',
-        internalUrl: 'https://sdk-testnet.aepps.com',
-        compilerUrl: 'https://compiler.aepps.com',
-      })
+      storeResponse()
     }
   }
 </script>

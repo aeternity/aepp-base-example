@@ -1,40 +1,46 @@
 /* global localStorage */
 
 import stampit from '@stamp/it'
+import AsyncInit from '@aeternity/aepp-sdk/es/utils/async-init'
 import * as R from 'ramda'
 
 let cachedAddress
 
 const genProxyMethod = method => function (...params) {
   if (method === 'address' && cachedAddress) return Promise.resolve(cachedAddress)
-  return this.addRequestToQueue(method, params)
+  return this.request(method, params)
 }
 
 const localStorageKey = 'UrlSchemeRpcClientResponse'
 
-export default stampit({
-  init () {
-    const url = new URL(window.location.href)
-    const result = url.searchParams.get('result')
-    const error = url.searchParams.get('error')
+export const storeResponse = () => {
+  const url = new URL(window.location.href)
+  const result = url.searchParams.get('result')
+  const error = url.searchParams.get('error')
 
-    if (result || error) {
-      localStorage.setItem(
-        localStorageKey,
-        JSON.stringify({
-          [error ? 'error' : 'result']: JSON.parse(decodeURIComponent(error || result))
-        })
+  if (result || error) {
+    localStorage.setItem(
+      localStorageKey,
+      JSON.stringify(
+        error ? { 'error': decodeURIComponent(error) }
+          : { 'result': JSON.parse(decodeURIComponent(result)) }
       )
-      window.close()
-    }
+    )
+    window.close()
+  }
+}
 
-    window.addEventListener('storage', () => {
+export default stampit(AsyncInit, {
+  async init () {
+    const storageHandler = () => {
       const response = localStorage[localStorageKey]
       if (response) {
         handleResponse(JSON.parse(response))
         localStorage.removeItem(localStorageKey)
       }
-    })
+    }
+
+    window.addEventListener('storage', storageHandler)
 
     const requestQueue = []
     let waitingForResponse = false
@@ -63,13 +69,27 @@ export default stampit({
       }
     }
 
-    this.addRequestToQueue = (name, params) => {
+    this.request = (name, params) => {
       const p = new Promise((resolve, reject) => {
         requestQueue.push({ name, params, resolve, reject })
       })
       callMethodFromQueue()
       return p
     }
+
+    this.destroyClient = () => window.removeEventListener('storage', storageHandler, false)
+
+    const { address, network } = await this.request('addressAndNetworkUrl', [])
+    cachedAddress = address
+    this.url = network.url
+    this.internalUrl = network.internalUrl
+    this.compilerUrl = network.compilerUrl
   },
-  methods: R.fromPairs(['address', 'sign', 'signTransaction'].map(m => [m, genProxyMethod(m)]))
+  composers({ stamp }) {
+    if (stamp.compose.methods) {
+      ['address', 'sign', 'signTransaction'].forEach(m => delete stamp.compose.methods[m])
+    }
+    const urlSchemeRpcMethods = R.fromPairs(['address', 'sign', 'signTransaction'].map(m => [m, genProxyMethod(m)]))
+    stamp.compose.methods = Object.assign(urlSchemeRpcMethods, stamp.compose.methods)
+  }
 })
