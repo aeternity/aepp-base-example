@@ -47,6 +47,15 @@
       </template>
     </div>
 
+    <div v-if="baseAppVersionResponse" class="bg-green w-full flex flex-row font-mono border border-b">
+      <div class="p-2 w-1/4">
+        Base app version
+      </div>
+      <div class="p-2 w-3/4 bg-grey-lightest">
+        {{baseAppVersionResponse | responseToString}}
+      </div>
+    </div>
+
     <h2 class="mt-4">Spend tokens</h2>
 
     <div class="border mt-4 rounded">
@@ -255,6 +264,7 @@
         addressResponse: null,
         heightResponse: null,
         nodeInfoResponse: null,
+        baseAppVersionResponse: null,
         spendTo: null,
         spendAmount: null,
         spendPayload: null,
@@ -338,13 +348,14 @@
     },
     async created () {
       this.client = await Aepp.compose({
-        deepConfiguration: { Ae: { methods: ['readQrCode'] } },
+        deepConfiguration: { Ae: { methods: ['readQrCode', 'baseAppVersion'] } },
       })({
         parent: this.runningInFrame ? window.parent : await this.getReverseWindow()
       })
       this.addressResponse = await errorAsField(this.client.address())
       this.heightResponse = await errorAsField(this.client.height())
       this.nodeInfoResponse = await errorAsField(this.client.getNodeInfo())
+      this.baseAppVersionResponse = await errorAsField(this.client.baseAppVersion())
     }
   }
 </script>
