@@ -244,7 +244,7 @@
 <script>
   //  is a webpack alias present in webpack.config.js
   import { Universal } from '@aeternity/aepp-sdk/es'
-  import UrlSchemeRpcClient, { storeResponse } from './UrlSchemeRpcClient'
+  import DeeplinkClient, { storeResponse } from './DeeplinkClient'
   import copyToClipboard from 'copy-to-clipboard'
 
   const errorAsField = async fn => {
@@ -288,7 +288,7 @@
     methods: {
       async initSdk () {
         if (this.client) this.client.destroyInstance();
-        this.client = await UrlSchemeRpcClient.compose(Universal, {
+        this.client = await DeeplinkClient.compose(Universal, {
           deepConfiguration: { Ae: { methods: ['readQrCode'] } },
         })()
         this.addressResponse = await errorAsField(this.client.address())

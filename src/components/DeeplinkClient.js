@@ -11,7 +11,7 @@ const genProxyMethod = method => function (...params) {
   return this.request(method, params)
 }
 
-const localStorageKey = 'UrlSchemeRpcClientResponse'
+const localStorageKey = 'DeeplinkClientResponse'
 
 export const storeResponse = () => {
   const url = new URL(window.location.href)
@@ -40,6 +40,7 @@ export default stampit(AsyncInit, {
       }
     }
 
+    localStorage.clear()
     window.addEventListener('storage', storageHandler)
 
     const requestQueue = []
@@ -55,7 +56,7 @@ export default stampit(AsyncInit, {
     }
 
     const buildRequestUrl = (method, params) => {
-      const url = new URL(`aepp-base:${method}`)
+      const url = new URL(`https://base.aepps.com/${method}`)
       params.forEach((p, i) => url.searchParams.set(`param${i}`, JSON.stringify(p)))
       url.searchParams.set('callback', window.location.origin)
       return url
@@ -65,7 +66,7 @@ export default stampit(AsyncInit, {
       if (!waitingForResponse && requestQueue.length) {
         const { name, params } = requestQueue[0]
         waitingForResponse = true
-        window.location.href = buildRequestUrl(name, params)
+        window.open(buildRequestUrl(name, params))
       }
     }
 
@@ -89,7 +90,7 @@ export default stampit(AsyncInit, {
     if (stamp.compose.methods) {
       ['address', 'sign', 'signTransaction'].forEach(m => delete stamp.compose.methods[m])
     }
-    const urlSchemeRpcMethods = R.fromPairs(['address', 'sign', 'signTransaction'].map(m => [m, genProxyMethod(m)]))
-    stamp.compose.methods = Object.assign(urlSchemeRpcMethods, stamp.compose.methods)
+    const deeplinkMethods = R.fromPairs(['address', 'sign', 'signTransaction'].map(m => [m, genProxyMethod(m)]))
+    stamp.compose.methods = Object.assign(deeplinkMethods, stamp.compose.methods)
   }
 })
