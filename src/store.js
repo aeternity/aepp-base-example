@@ -1,13 +1,14 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-import { Aepp } from '@aeternity/aepp-sdk/es';
+import { Universal } from '@aeternity/aepp-sdk/es';
+import walletConnector, { providers } from 'aepp-wallet-connector/dist/aeppWalletConnector.common';
+import { storeResponse } from 'aepp-wallet-connector/src/DeeplinkClient';
 
 Vue.use(Vuex);
+storeResponse();
 
 export default new Vuex.Store({
   state: {
-    sdkPromise: Aepp.compose({
-      deepConfiguration: { Ae: { methods: ['readQrCode', 'baseAppVersion'] } },
-    })(),
+    sdkPromise: walletConnector(providers.default, [Universal]),
   },
 });
